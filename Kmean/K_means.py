@@ -6,13 +6,13 @@ import numpy as np
 from skimage.feature import hog
 
 connection = oracledb.connect(
-    user="pvd",
-    password="12345",
-    dsn="localhost:1521/oracle"
+    user="system",
+    password="hieu08052002",
+    dsn="127.0.0.1:1521/orcl"
 )
 cursor = connection.cursor()
 
-folder_path = 'H:\\DAT\\HCSDL_DPT\\Data'
+folder_path = 'C:\\Users\\untiv\\Desktop\\data'
 
 
 def main():
@@ -40,6 +40,7 @@ def main():
         # Thêm ảnh vào image
         with open(file_path, 'rb') as f:
             image.append(f.read())
+
 
         #  Trích đặc trưng
         feature = extract_features(file_path)
@@ -73,7 +74,13 @@ def main():
                 feature[i] = 1
             else:
                 feature[i] = round(float((feature[i]-min_value[i]) / (max_value[i]-min_value[i])), 2)
-
+    # Chuẩn hóa centroids đặc trưng
+    for feature in centroids:
+        for i in range(feature.size):
+            if min_value[i] == max_value[i]:
+                feature[i] = 1
+            else:
+                feature[i] = round(float((feature[i]-min_value[i]) / (max_value[i]-min_value[i])), 2)
     # K-means
     cluster_id = np.zeros(len(feature_vectors))
     loop = 10

@@ -1,21 +1,52 @@
 import base64
 import io
 import math
-import oracledb
-from flask import Flask
+from flask import Flask,request,jsonify,send_file
 from skimage.feature import hog
 import cv2 as cv
 import numpy as np
+import oracledb
+from sympy import reduced_totient
+from flask_cors import CORS
 
 connection = oracledb.connect(
-    user="pvd",
-    password="12345",
-    dsn="localhost:1521/oracle"
+    user="system",
+    password="hieu08052002",
+    dsn="localhost:1521/orcl"
 )
 cursor = connection.cursor()
 
 app = Flask(__name__)
-@app.route('/api')
+CORS(app)
+@app.route('/api/image/search',methods=['POST'])
+def callSearch():
+    image_bytes = request.files['image'].read()
+    image_np = np.frombuffer(image_bytes, dtype=np.uint8)
+    image = cv.imdecode(image_np, cv.IMREAD_COLOR)
+    return findImage(image)
+
+@app.route('/api/image/get/<int:id>', methods=['GET'])
+def callImage(id):
+
+    sql = 'select image from flowers where id = :id'
+    cursor.execute(sql, id=id)
+    result = cursor.fetchone()
+
+    if result is None:
+        return jsonify({'error': 'Image not found'}), 404
+
+    blob_data = result[0]
+    stream = io.BytesIO(blob_data.read())
+    image = cv.imdecode(np.frombuffer(stream.read(), np.uint8), cv.IMREAD_COLOR)
+
+    # Chuyển đổi ảnh thành định dạng base64
+    retval, buffer = cv.imencode('.jpg', image)
+    img_str = base64.b64encode(buffer).decode('utf-8')
+
+    # Trả về ảnh dưới dạng base64
+    return jsonify({'image_base64': img_str})
+
+
 def findImage(image):
 
     #  Trích xuất đặc trưng
@@ -91,26 +122,20 @@ def findImage(image):
             distances[k] = new_distance
             index[k] = new_index
 
-
-    # Hiển thị kết quả cho test
-    # for i in index:
-    #     blob_data = images[i][1]
-    #     # binary_data = base64.b64encode(blob_data.read())
-    #     # data = binary_data.decode("UTF-8")
-    #     stream = io.BytesIO(blob_data.read())
-    #     image = cv.imdecode(np.frombuffer(stream.read(), np.uint8), cv.IMREAD_COLOR)
-    #     cv.imshow('image', image)
-    #     cv.waitKey(0)
-
     result = []
     for i in index:
         blob_data = images[i][1]
+
+
         stream = io.BytesIO(blob_data.read())
         image = cv.imdecode(np.frombuffer(stream.read(), np.uint8), cv.IMREAD_COLOR)
-        result.append({image: image})
+
+        # Chuyển đổi ảnh thành định dạng base64
+        retval, buffer = cv.imencode('.jpg', image)
+        img_str = base64.b64encode(buffer).decode('utf-8')
+
+        result.append({'image_base64': img_str})
     return result
-
-
 # Hàm trích xuất đặc trưng
 def extract_features(image):
     hsv_vector = extract_hsv(image)
@@ -199,3 +224,5 @@ def calculate_distance(centroid, new_image):
     for i in range(len(centroid)):
         result += (centroid[i] - new_image[i]) ** 2
     return math.sqrt(result)
+if __name__ == "__main__":
+    app.run()

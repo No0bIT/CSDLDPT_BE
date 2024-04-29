@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 connection = oracledb.connect(
-    user="pvd",
-    password="12345",
+    user="vmh",
+    password="Hieu08052002",
     dsn="localhost:1521/oracle"
 )
 

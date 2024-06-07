@@ -6,7 +6,8 @@ from skimage.feature import hog
 import cv2 as cv
 import numpy as np
 import oracledb
-from sympy import reduced_totient
+
+from flask import Flask
 from flask_cors import CORS
 
 connection = oracledb.connect(
@@ -18,6 +19,9 @@ cursor = connection.cursor()
 
 app = Flask(__name__)
 CORS(app)
+
+
+
 @app.route('/api/image/search',methods=['POST'])
 def callSearch():
     image_bytes = request.files['image'].read()
@@ -199,7 +203,7 @@ def extract_hog(image):
     gray_image = convert_bgr_to_gray(image)
     (hog_vector, hog_image) = hog(gray_image,
                                   orientations=9,
-                                  pixels_per_cell=(8, 8),
+                                  pixels_per_cell=(6, 6),
                                   transform_sqrt=True,
                                   cells_per_block=(2, 2),
                                   block_norm="L2",
@@ -224,5 +228,6 @@ def calculate_distance(centroid, new_image):
     for i in range(len(centroid)):
         result += (centroid[i] - new_image[i]) ** 2
     return math.sqrt(result)
+
 if __name__ == "__main__":
     app.run()

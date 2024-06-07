@@ -12,7 +12,7 @@ connection = oracledb.connect(
 )
 cursor = connection.cursor()
 
-folder_path = 'C:\\Users\\untiv\\Desktop\\data'
+folder_path = 'C:\\Users\\untiv\\Desktop\\data\\Output_Image'
 
 
 def main():
@@ -40,7 +40,6 @@ def main():
         # Thêm ảnh vào image
         with open(file_path, 'rb') as f:
             image.append(f.read())
-
 
         #  Trích đặc trưng
         feature = extract_features(file_path)
@@ -74,13 +73,7 @@ def main():
                 feature[i] = 1
             else:
                 feature[i] = round(float((feature[i]-min_value[i]) / (max_value[i]-min_value[i])), 2)
-    # Chuẩn hóa centroids đặc trưng
-    for feature in centroids:
-        for i in range(feature.size):
-            if min_value[i] == max_value[i]:
-                feature[i] = 1
-            else:
-                feature[i] = round(float((feature[i]-min_value[i]) / (max_value[i]-min_value[i])), 2)
+
     # K-means
     cluster_id = np.zeros(len(feature_vectors))
     loop = 10
@@ -221,3 +214,4 @@ def calculate_distance(centroid, new_image):
 
 if __name__ == "__main__":
     main()
+
